@@ -1,0 +1,76 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Entornos virtuales
+venv/
+ENV/
+env/
+.venv
+env.bak/
+venv.bak/
+
+# IDE y editores
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.project
+.pydevproject
+.settings/
+.sublime-project
+.sublime-workspace
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Archivos de salida (generados al correr)
+output/
+*.log
+salida/
+
+# Archivos temporales
+*.tmp
+*.temp
+*.bak
+*.backup
+.tmp/
+
+# Datos sensibles
+*.env
+.env.local
+secrets.json
+credentials.json
+
+# OS
+Thumbs.db
+.DS_Store
+.AppleDouble
+.LSOverride
