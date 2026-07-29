@@ -42,7 +42,7 @@ python3 procesar_resenas.py --input other_dataset.csv --outdir my_output/ --top-
 **Verify everything works** (unit tests):
 ```bash
 python3 tests/test_limpieza.py -v
-# 11 checks for cleaning/normalization
+# 13 checks for cleaning/normalization
 # Runtime: <0.1s (all should pass ✅)
 ```
 
@@ -152,7 +152,7 @@ resolucion de reto_Claude/
 ├── resenas_flowapp.csv           # 📊 Input dataset (597 rows)
 │
 ├── tests/
-│   └── test_limpieza.py          # ✅ 11 unit tests (stdlib, zero deps)
+│   └── test_limpieza.py          # ✅ 13 unit tests (stdlib, zero deps)
 │
 ├── output/  (generated at runtime)
 │   ├── resenas_limpias.csv
