@@ -1,185 +1,194 @@
-# 📊 Análisis de Reseñas FlowApp
+# 📊 FlowApp Review Analysis
 
-**Autor:** Diego Arenas (Diegoarenas111@gmail.com)
+**Author:** Diego Arenas (Diegoarenas111@gmail.com)
 
-Limpiador profesional de reseñas de apps. Toma un CSV sucio (~600 filas con emojis, ratings rotos, duplicados) y devuelve: dataset limpio, análisis de palabras frecuentes por rating, stats completos. Sin dependencias externas: solo Python 3.9+.
+Professional app review cleaner. Takes a dirty CSV (~600 rows with emojis, broken ratings, duplicates) and returns: clean dataset, word frequency analysis by rating, full statistical summary. Zero external dependencies: Python 3.9+ only.
 
 ---
 
-## ⚡ Inicio rápido (3 pasos)
+## ⚡ Quick Start (3 steps)
 
-### Paso 1: Descarga y acceso
+### Step 1: Setup
 
 ```bash
-# Navega a la carpeta del proyecto
-cd /ruta/a/Reto1/resolucion\ de\ reto_Claude
+# Navigate to the project folder
+cd /path/to/Reto1/resolucion\ de\ reto_Claude
 
-# Verifica que tengas Python 3.9 o superior
+# Verify Python 3.9+
 python3 --version
-# Esperado: Python 3.9+ (se probó con 3.11)
+# Expected: Python 3.9+ (tested with 3.11)
+
+# Check the structure
+ls -la
+# You should see: procesar_resenas.py, limpieza.py, stopwords_es.py,
+#                 resenas_flowapp.csv, tests/, output/
 ```
 
-### Paso 2: Ejecuta el análisis
+### Step 2: Run the analysis
 
-**Forma más simple** (recomendada para la primera vez):
+**Simplest way** (recommended first time):
 ```bash
 python3 procesar_resenas.py
-# Lee de: ../resenas_flowapp.csv (automático)
-# Escribe en: ./output/
-# Tiempo: ~1 segundo
+# Reads from: resenas_flowapp.csv (auto-detected)
+# Writes to: ./output/
+# Runtime: ~1 second
 ```
 
-**Con opciones personalizadas**:
+**Custom options**:
 ```bash
-python3 procesar_resenas.py --input otro_dataset.csv --outdir mi_salida/ --top-n 25
+python3 procesar_resenas.py --input other_dataset.csv --outdir my_output/ --top-n 25
 ```
 
-**Verifica que todo funcione** (tests unitarios):
+**Verify everything works** (unit tests):
 ```bash
 python3 tests/test_limpieza.py -v
-# Ejecuta 13 checks de limpieza/normalización
-# Tiempo: ~0.001s (todo debe pasar ✅)
+# 11 checks for cleaning/normalization
+# Runtime: <0.1s (all should pass ✅)
 ```
 
-### Paso 3: Revisa los resultados
+### Step 3: Review the results
 
 ```bash
 cd output/
 ls -la
-cat resumen_estadistico.json  # estadísticas generales
-cat reporte_calidad_datos.json  # qué se limpió/descartó
-head -10 palabras_frecuentes_por_rating.csv  # palabras top por rating
+cat resumen_estadistico.json          # statistical summary
+cat reporte_calidad_datos.json        # what was cleaned/discarded
+head -10 palabras_frecuentes_por_rating.csv  # top words by rating
 ```
 
 ---
 
-## 📋 Referencia rápida de comandos
+## 📋 Quick Reference
 
 ```bash
-# Correr con parámetros personalizados
-python3 procesar_resenas.py --input mi_dataset.csv --outdir salida/ --top-n 20
+# Run with custom parameters
+python3 procesar_resenas.py --input my_dataset.csv --outdir output/ --top-n 20
 
-# Ver logs en tiempo real
-python3 procesar_resenas.py 2>&1 | tee reporte.log
+# Save logs to file
+python3 procesar_resenas.py 2>&1 | tee report.log
 
-# Ejecutar solo los tests
+# Run tests only
 python3 tests/test_limpieza.py -v
 
-# Aumentar el top a 25 palabras por rating
+# Increase top words to 25 per rating
 python3 procesar_resenas.py --top-n 25
 ```
 
 ---
 
-## 📁 Qué sale en `output/`
+## 📁 What's in `output/`
 
-| Archivo | Descripción |
+| File | Description |
 |---|---|
-| **resenas_limpias.csv** | Dataset completo procesado: texto limpio, rating normalizado, flags de calidad |
-| **reporte_calidad_datos.json** | Auditoría detallada: qué se limpió, descartó y por qué (transaparencia total) |
-| **resumen_estadistico.json** | Números: promedio, mediana, moda, desviación estándar, distribución de ratings |
-| **palabras_frecuentes_por_rating.csv/.json** | Top-N palabras más frecuentes por cada rating (sin ruido de stopwords) |
+| **resenas_limpias.csv** | Full processed dataset: clean text, normalized rating, quality flags |
+| **reporte_calidad_datos.json** | Detailed audit: what was cleaned, discarded, and why (full transparency) |
+| **resumen_estadistico.json** | Numbers: mean, median, mode, standard deviation, rating distribution |
+| **palabras_frecuentes_por_rating.csv/.json** | Top-N most frequent words per rating (stopwords removed) |
 
-## 🎯 Qué "truco" tiene el dataset (y cómo se resolvió)
+## 🎯 Dataset quirks (and how they're handled)
 
-El CSV es sucio a propósito — parte del reto. Aquí están los problemas encontrados y cómo se manejaron:
+The CSV is deliberately dirty — part of the challenge. Here's what was found and how it's addressed:
 
-| Problema | Casos | Solución |
+| Problem | Cases | Solution |
 |----------|-------|----------|
-| **Duplicados exactos** | 14 filas | Misma reseña del mismo usuario en la misma fecha. Se elimina, manteniendo la primera. |
-| **Ratings vacíos/rotos** | 19 filas | Vacío (9), fuera de rango -1/0/6/7 (7), símbolos `?` o `N/A`. Se marcan como inválidos pero **no se borran**. |
-| **Ratings textuales** | 3 filas | `"cinco"` es un 5 válido pero mal formateado. Se recupera automáticamente. |
-| **Texto vacío o solo emojis** | 26 filas | Se marca como vacío, se excluye del análisis de palabras, pero la fila se conserva. |
+| **Exact duplicates** | 14 rows | Same review from same user on same date. Removed, keeping the first occurrence. |
+| **Empty/broken ratings** | 19 rows | Empty (9), out of range -1/0/6/7 (7), symbols `?` or `N/A`. Flagged as invalid but **not deleted**. |
+| **Textual ratings** | 3 rows | `"cinco"` is a valid 5 but malformed. Auto-recovered. |
+| **Empty or emoji-only text** | 26 rows | Flagged as empty, excluded from word analysis, but the row is preserved. |
 
-**Principio clave:** Nada se descarta en silencio. Todo queda registrado en `reporte_calidad_datos.json` para auditabilidad total.
-
----
-
-## 📊 Qué hace exactamente
-
-### Requisitos funcionales (lo que pide el reto)
-
-✅ **Limpieza de texto:** minúsculas, sin emojis/caracteres especiales, espacios duplicados eliminados. Conserva tildes/ñ (quedá español legible, no sopa de caracteres).
-
-✅ **Deduplicación:** elimina filas exactas re-ingresadas por el mismo usuario en la misma fecha.
-
-✅ **Manejo inteligente de ruido:** ratings inválidos, textos vacíos y duplicados no se eliminan silenciosamente — se marcan y se auditan.
-
-✅ **Palabras frecuentes por rating:** top-N palabras para cada nivel (1⭐ a 5⭐), **sin stopwords** (o sea: sin "el/la/que/muy/es", puro ruido).
-
-✅ **Resumen estadístico:** promedio, mediana, moda, desviación estándar, distribución de ratings en números y porcentajes.
-
-✅ **Reporte de calidad:** archivo JSON que explica cada descarte/corrección (transaparencia total).
-
-### Requisitos no funcionales (como lo hace)
-
-🔒 **Reproducibilidad:** mismo input → siempre mismo output. Sin aleatoriedad, sin depender del orden de archivos.
-
-🔒 **Auditabilidad:** cada fila modificada/excluida queda registrada con su motivo. Nunca pierde información.
-
-🔒 **Portabilidad:** cero dependencias — solo Python stdlib. Funciona en cualquier máquina con Python 3.9+.
-
-🔒 **Configurabilidad:** parámetros por CLI (`--input`, `--outdir`, `--top-n`), sin tocar el código.
-
-🔒 **Testabilidad:** lógica de limpieza en funciones puras (`limpieza.py`), I/O separada (`procesar_resenas.py`). 13 tests automáticos.
-
-🔒 **UTF-8 nativo:** emojis, tildes, ñ andan bien de inicio a fin.
-
-🔒 **Fail-fast:** si falta una columna del CSV, el script aborta con error claro. Aserciones internas verifican que los números cierren antes de escribir.
+**Core principle:** Nothing is silently discarded. Everything is logged in `reporte_calidad_datos.json` for full auditability.
 
 ---
 
-## 🏗️ Estructura del código
+## 📊 What it does
+
+### Functional requirements (what the challenge asks for)
+
+✅ **Text cleaning:** lowercase, emojis/special characters removed, duplicate spaces collapsed. Preserves accents/ñ (readable Spanish, not garbled text).
+
+✅ **Deduplication:** removes exact duplicate rows re-entered by the same user on the same date.
+
+✅ **Smart noise handling:** invalid ratings, empty text, and duplicates are never silently deleted — they're flagged and audited.
+
+✅ **Word frequency by rating:** top-N words for each level (1⭐ to 5⭐), **without stopwords** (no "el/la/que/muy/es" noise).
+
+✅ **Statistical summary:** mean, median, mode, standard deviation, rating distribution in absolute numbers and percentages.
+
+✅ **Quality report:** JSON file explaining every discard/correction (full transparency).
+
+### Non-functional requirements (how it's done)
+
+🔒 **Reproducibility:** same input → always same output. No randomness, no order-dependent behavior.
+
+🔒 **Auditability:** every modified/excluded row is logged with its reason. No information loss.
+
+🔒 **Portability:** zero dependencies — Python stdlib only. Runs on any machine with Python 3.9+.
+
+🔒 **Configurability:** CLI parameters (`--input`, `--outdir`, `--top-n`), no code changes needed.
+
+🔒 **Testability:** cleaning logic in pure functions (`limpieza.py`), I/O separated (`procesar_resenas.py`). 11 automated tests.
+
+🔒 **Native UTF-8:** emojis, accents, ñ work end-to-end.
+
+🔒 **Fail-fast:** missing CSV columns abort with a clear error. Internal assertions verify numbers add up before writing output.
+
+---
+
+## 🏗️ Code Structure
 
 ```
 resolucion de reto_Claude/
 │
-├── procesar_resenas.py        # 🎬 Script principal: orquesta todo
-│                              #    → lee CSV → limpia → analiza → escribe resultados
+├── procesar_resenas.py           # 🎬 Main script: orchestrates everything
+│                                 #    → read CSV → clean → analyze → write results
 │
-├── limpieza.py                # 🧹 Funciones de limpieza (puras, testeables)
-│                              #    → limpiar_texto(), normalizar_rating()
-│                              #    → tokenizar_para_frecuencia(), dedup keys
+├── limpieza.py                   # 🧹 Pure cleaning functions (testable)
+│                                 #    → limpiar_texto(), normalizar_rating()
+│                                 #    → tokenizar_para_frecuencia(), dedup keys
 │
-├── stopwords_es.py            # 📍 Lista de palabras vacías en español
-│                              #    (usada para evitar ruido en top-words)
+├── stopwords_es.py               # 📍 Spanish stopwords list
+│                                 #    (removes noise from frequency analysis)
+│
+├── resenas_flowapp.csv           # 📊 Input dataset (597 rows)
 │
 ├── tests/
-│   └── test_limpieza.py       # ✅ 13 tests unitarios (stdlib, sin dependencias)
+│   └── test_limpieza.py          # ✅ 11 unit tests (stdlib, zero deps)
 │
-├── output/  (creada al correr)
+├── output/  (generated at runtime)
 │   ├── resenas_limpias.csv
 │   ├── reporte_calidad_datos.json
 │   ├── resumen_estadistico.json
 │   ├── palabras_frecuentes_por_rating.csv
 │   └── palabras_frecuentes_por_rating.json
 │
-└── README.md (este archivo)
+├── .gitignore                    # Git: what to ignore
+├── README.md                     # This file
+└── .git/                         # Version control
 ```
 
-### Por qué esta estructura
+### Why this structure
 
-- **Separación de responsabilidades:** `limpieza.py` no sabe de archivos (puro cálculo), `procesar_resenas.py` hace I/O.
-- **Testeable:** puedes probar la limpieza sin tocar el CSV.
-- **Reutilizable:** alguien más puede importar `limpieza.py` en su propio script.
-- **Mantenible:** cada archivo hace una cosa bien.
+- **Separation of concerns:** `limpieza.py` knows nothing about files (pure computation), `procesar_resenas.py` handles I/O.
+- **Testable:** you can test the cleaning logic without touching the CSV.
+- **Reusable:** anyone can import `limpieza.py` into their own script.
+- **Maintainable:** each file does one thing well.
 
 ---
 
-## 📈 Ejemplo de salida
+## 📈 Sample Output
 
-Después de correr `python3 procesar_resenas.py`, verás algo así:
+After running `python3 procesar_resenas.py`:
 
 ```
-INFO: Leyendo /ruta/a/resenas_flowapp.csv
-INFO: Filas leídas=597 duplicadas_eliminadas=14 finales=583
-INFO: Ratings inválidos=19 (detalle: {'(vacío)': 9, '-1': 2, ...}) 
-       | recuperados de texto={'cinco': 3} 
-       | textos vacíos=26
-INFO: Resultados escritos en ./output
+INFO: Reading /path/to/resenas_flowapp.csv
+INFO: Rows read=597 duplicates_removed=14 final=583
+INFO: Invalid ratings=19 (detail: {'(empty)': 9, '-1': 2, ...})
+       | recovered from text={'cinco': 3}
+       | empty texts=26
+INFO: Results written to ./output
 ```
 
-**Archivo: `resumen_estadistico.json`**
+**File: `resumen_estadistico.json`**
 ```json
 {
   "total_ratings_validos": 564,
@@ -204,7 +213,7 @@ INFO: Resultados escritos en ./output
 }
 ```
 
-**Archivo: `palabras_frecuentes_por_rating.csv`** (muestra)
+**File: `palabras_frecuentes_por_rating.csv`** (sample)
 ```
 rating,palabra,frecuencia
 1,experiencia,11
@@ -220,28 +229,28 @@ rating,palabra,frecuencia
 
 ---
 
-## ❓ Preguntas frecuentes
+## ❓ FAQ
 
-**P: ¿Qué pasa si no tengo Python 3.9?**
-R: Baja Python 3.11+ de [python.org](https://python.org). Este código es compatible con 3.9-3.13.
+**Q: What if I don't have Python 3.9?**
+A: Download Python 3.11+ from [python.org](https://python.org). This code is compatible with 3.9–3.13.
 
-**P: ¿Por qué no usas Pandas?**
-R: El dataset es pequeño (597 filas). Pandas es overkill. Stdlib es más rápido aquí y **sin dependencias**.
+**Q: Why not use Pandas?**
+A: The dataset is small (597 rows). Pandas is overkill. Stdlib is faster here and adds **zero dependencies**.
 
-**P: ¿Puedo cambiar la ruta del input/output?**
-R: Sí, usa `--input` y `--outdir`:
+**Q: Can I change the input/output paths?**
+A: Yes, use `--input` and `--outdir`:
 ```bash
-python3 procesar_resenas.py --input /ruta/otro.csv --outdir /salida/
+python3 procesar_resenas.py --input /path/to/other.csv --outdir /output/
 ```
 
-**P: ¿Qué hacen los tests?**
-R: Verifican que `limpiar_texto()`, `normalizar_rating()`, etc. funcionen correctamente. Son la red de seguridad.
+**Q: What do the tests cover?**
+A: They verify `limpiar_texto()`, `normalizar_rating()`, etc. work correctly. Safety net for future changes.
 
-**P: ¿Cómo veo logs más detallados?**
-R: Cambia el nivel en `procesar_resenas.py` línea ~52 de `INFO` a `DEBUG`.
+**Q: How do I see more detailed logs?**
+A: Change the log level in `procesar_resenas.py` around line ~38 from `INFO` to `DEBUG`.
 
 ---
 
-## 🤝 Contacto
+## 🤝 Contact
 
-Si hay problemas o mejoras, contacta: **Diego Arenas** (Diegoarenas111@gmail.com)
+Questions or improvements: **Diego Arenas** (Diegoarenas111@gmail.com)

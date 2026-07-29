@@ -169,7 +169,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--input", type=Path,
-        default=Path(__file__).resolve().parent.parent / "resenas_flowapp.csv",
+        default=Path(__file__).resolve().parent / "resenas_flowapp.csv",
         help="Ruta al CSV crudo de reseñas.",
     )
     parser.add_argument(
